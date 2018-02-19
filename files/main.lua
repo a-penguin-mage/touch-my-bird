@@ -14,6 +14,7 @@ Collision = require "collision"
 local menu = {}
 local game = {}
 local inst = {}
+local dead = {}
 
 --Tables
 local scrollingscreen = {}
@@ -30,6 +31,10 @@ instructions = love.graphics.newImage("assets/images/instructions.png")
 
 -- Fonts
 pixelfont100 = love.graphics.newFont("assets/fonts/pixelmix/pixelmix.ttf",100)
+
+-- Sounds
+bgmusic = love.audio.newSource("assets/sounds/bg_music.wav")
+death = love.audio.newSource("assets/sounds/death.wav")
 
 -- Constants
 TX = love.graphics.getWidth()
@@ -83,6 +88,16 @@ end
 -------------------------------------------------------------------
 -- Game functions
 -------------------------------------------------------------------
+function game:enter()
+  love.audio.play(bgmusic, "static")
+  health = H/H
+  adder_counter = 0
+  menu_bird_counter = 0
+  birds_touched = 0
+  birds = {}
+  speedup = 1      
+end
+
 function game:mousepressed(mx, my)
   game:checkbird(mx,my)
 end
@@ -110,7 +125,6 @@ end
 function game:update(dt)
   -- if no bird spawn one
   if #birds==0 then game:getabird() end
-  
   -- check for downfall
   for i, bird in ipairs(birds) do
     if bird.y>TY then
@@ -134,32 +148,47 @@ function game:update(dt)
     speedup = speedup + 0.3
   end
   adder_counter = adder_counter + dt
+  
+  if health<=0 then      
+    Gamestate.push(dead) -- cuz Gamestate.switch() wasn't working right
+  end
 end
 
 function game:draw()
-  if health<=0 then      
-    -- cover everything if health is 0 (will stop spawn later)
-    love.graphics.setColor(255,255,255)
-    love.graphics.draw(loseback,0,0,0,fx,fy)
-  else
-    love.graphics.setColor(255,255,255)
-      
-    love.graphics.setColor(255,0,0)
-    love.graphics.rectangle("fill",TX/4,TY/4,TX/2,TY/2*health,fx,fy)
-      
-    -- draw the birds
-    for i, bird in ipairs(birds) do
-      love.graphics.setColor(255,255,255)
-      love.graphics.draw(birdimg, bird.x, bird.y, 0, BIRDSIZE/birdimg:getWidth()*fx, BIRDSIZE/birdimg:getHeight()*fy)
-    end
+  love.graphics.setColor(255,255,255)
     
-    -- draw the counter in the middle of the screen
-    love.graphics.setColor(0,0,0)
-    love.graphics.setFont(pixelfont100)
-    love.graphics.printf(birds_touched,TX*-0.08,TY*0.85/2,TX,"center",0,fx*2,fy*2)
+  love.graphics.setColor(255,0,0)
+  love.graphics.rectangle("fill",TX/4,TY/4,TX/2,TY/2*health,fx,fy)
+    
+  -- draw the birds
+  for i, bird in ipairs(birds) do
     love.graphics.setColor(255,255,255)
+    love.graphics.draw(birdimg, bird.x, bird.y, 0, BIRDSIZE/birdimg:getWidth()*fx, BIRDSIZE/birdimg:getHeight()*fy)
   end
+  
+  -- draw the counter in the middle of the screen
+  love.graphics.setColor(0,0,0)
+  love.graphics.setFont(pixelfont100)
+  love.graphics.printf(birds_touched,TX*-0.08,TY*0.85/2,TX,"center",0,fx*2,fy*2)
+  love.graphics.setColor(255,255,255)
 end
+
+-------------------------------------------------------------------
+-- Dead functions
+-------------------------------------------------------------------
+function dead:enter()
+  love.audio.stop(bgmusic)
+  love.audio.play(death)
+end
+
+function dead:draw()
+  if(love.mouse.isDown(1)) then
+    game:enter() -- not the best solution, but it wasn't getting called so...
+    Gamestate.pop()
+  end
+  love.graphics.draw(loseback,0,0,0,fx,fy)
+end
+
 
 -------------------------------------------------------------------
 -- General functions
