@@ -35,6 +35,7 @@ pixelfont100 = love.graphics.newFont("assets/fonts/pixelmix/pixelmix.ttf",100)
 -- Sounds
 bgmusic = love.audio.newSource("assets/sounds/bg_music.wav")
 death = love.audio.newSource("assets/sounds/death.wav")
+gotbird = love.audio.newSource("assets/sounds/death.wav")
 
 -- Constants
 TX = love.graphics.getWidth()
@@ -105,6 +106,7 @@ end
 function game:checkbird(mx,my) 
   for i, bird in ipairs(birds) do
     if Collision:inCircle(bird.x+BIRDSIZE/2*fx, bird.y+BIRDSIZE/2*fy*1.2, BIRDSIZE/2*math.max(fx,fy)*1.2,mx,my) then
+      --love.audio.play(gotbird)
       game:getabird()
       birds_touched = birds_touched+1
       table.remove(birds,i)
@@ -169,7 +171,7 @@ function game:draw()
   -- draw the counter in the middle of the screen
   love.graphics.setColor(0,0,0)
   love.graphics.setFont(pixelfont100)
-  love.graphics.printf(birds_touched,TX*-0.08,TY*0.85/2,TX,"center",0,fx*2,fy*2)
+  love.graphics.printf(birds_touched,(TX*-1/2)*fx,TY*0.425,TX,"center",0,fx*2,fy*2)
   love.graphics.setColor(255,255,255)
 end
 
@@ -182,11 +184,15 @@ function dead:enter()
 end
 
 function dead:draw()
-  if(love.mouse.isDown(1)) then
-    game:enter() -- not the best solution, but it wasn't getting called so...
-    Gamestate.pop()
-  end
+--  if(love.mouse.isDown(1)) then
+--    game:enter() -- not the best solution, but it wasn't getting called so...
+--    Gamestate.pop()
+--  end
   love.graphics.draw(loseback,0,0,0,fx,fy)
+  love.graphics.setFont(pixelfont100)
+  love.graphics.setColor(255,0,0)
+  love.graphics.printf(birds_touched,(TX*-1/2)*fx,TY*0.425,TX,"center",0,fx*2,fy*2)
+  love.graphics.setColor(255,255,255)
 end
 
 
